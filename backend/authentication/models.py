@@ -33,7 +33,7 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
     last_name = models.CharField(max_length=50, blank=False)
     otp = models.CharField(max_length=7,blank=True,null=True)
     otp_expires = models.DateTimeField(blank=True,null=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
