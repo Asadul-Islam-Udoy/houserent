@@ -153,3 +153,8 @@ EMAIL_HOST_PASSWORD = 'vjvqhqzdbccquqgd'   # NOT your Gmail password!
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 APPEND_SLASH = False
+
+AUTHENTICATION_BACKENDS = [
+    "accounts.backends.EmailOrPhoneBackend",  # custom backend
+    "django.contrib.auth.backends.ModelBackend",  # default
+]

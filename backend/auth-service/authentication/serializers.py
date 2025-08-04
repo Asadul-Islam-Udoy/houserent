@@ -1,22 +1,37 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-
+import uuid
 User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)##validators=[validate_password]
     password2 = serializers.CharField(write_only=True)
-    
+    email= serializers.EmailField(required=False,allow_blank=True)
+    phone= serializers.CharField(required=False,allow_blank=True)
     class Meta:
         model = User
         fields = ['username','email','first_name','last_name','phone','password','password2']
    
    
     def validate(self,attrs):
-            if attrs['password'] != attrs['password2']:
-                raise serializers.ValidationError({"password":"Password is not match!"})
-            return attrs
+        email = attrs.get('email')
+        phone = attrs.get('phone','')
+        first_name = attrs.get('first_name', '')
+        last_name = attrs.get('last_name', '')
+        
+        if not email and not phone:
+            raise serializers.ValidationError({"message":"Either email or phone is required"})
+       
+        if not email:
+            attrs['email'] =  f"no-email-{first_name}{last_name}".lower()
+       
+        if not phone :
+            attrs['phone'] =  f"no-phone-{uuid.uuid4().hex[:6]}"  
+        
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password":"Password is not match!"})
+        return attrs
         
     def create(self,validated_data):
         validated_data.pop("password2")
