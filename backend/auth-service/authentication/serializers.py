@@ -1,5 +1,7 @@
 from rest_framework import serializers
+from django.db import models
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 import uuid
 User = get_user_model()
@@ -11,7 +13,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     phone= serializers.CharField(required=False,allow_blank=True)
     class Meta:
         model = User
-        fields = ['username','email','first_name','last_name','phone','password','password2']
+        fields = ['username','email','first_name','last_name','phone','password','password2','is_active','email_verified_at']
    
    
     def validate(self,attrs):
@@ -54,4 +56,31 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         exclude = ['password']
 
+class LoginSerializer(serializers.Serializer):
+    email_or_phone = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True)
+    
+    def validate(self,attrs):
+        email_or_phone = attrs.get('email_or_phone').strip()
+        password = attrs.get('password')
         
+        if not email_or_phone or not password:
+            raise serializers.ValidationError("email/phone or password required!")
+        
+        user = User.objects.filter(models.Q(email=email_or_phone) | models.Q(phone=email_or_phone)).first()
+    
+        if not user:
+           raise serializers.ValidationError("Invalid credentials.")
+        
+        if not user.check_password(password):
+           raise serializers.ValidationError("Invalid password!")
+       
+        if not user.is_active:
+           raise serializers.ValidationError("Accound is not active")
+       
+        refresh = RefreshToken.for_user(user)
+        return{
+             "refresh": str(refresh),
+            "access": str(refresh.access_token),
+             "user": UserSerializer(user).data
+        }

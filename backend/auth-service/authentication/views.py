@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer,UserSerializer
+from .serializers import RegisterSerializer,UserSerializer,LoginSerializer
 # Create your views here.
 
 User = get_user_model()
@@ -98,22 +98,33 @@ class UserViewSet(viewsets.GenericViewSet):
     ## verify email otp
     @action(detail=False,methods=['post'],permission_classes=[permissions.AllowAny])
     def verify_email(self,request):
-         email = request.data.get('email')
+         email_or_phone = request.data.get('email_or_phone')
          input_otp = request.data.get('otp')
-         if not email or not input_otp:
-             return Response({"message":"Email and OTP are required"},status=status.HTTP_400_BAD_REQUEST)
+         if not email_or_phone or not input_otp:
+             return Response({"message":"email or phone and OTP are required"},status=status.HTTP_400_BAD_REQUEST)
          try:
-           user = User.objects.get(email=email)  
+            user = User.objects.filter(email=email_or_phone).first()  
+            if not user:
+               user = User.objects.filter(phone=email_or_phone).first() 
+            if not user:
+                return Response({"message": "User is not found"}, status=status.HTTP_404_NOT_FOUND)
          except User.DoesNotExist:
              return Response({"message":"User is not found"},status=status.HTTP_404_NOT_FOUND)
          
          if user.verify_otp(input_otp):
-             user.otp = None,
-             user.otp_expires = None,
-             user.is_active = True
-             user.save()
+            user.is_active = True
+            user.email_verified_at = timezone.now()
+            user.otp = None
+            user.otp_expires = None
+            user.save(update_fields=['otp', 'otp_expires', 'is_active', 'email_verified_at'])
              
-             refresh = RefreshToken.for_user(user)
-             return Response({"message":"OTP verify successfully","access_token":str(refresh.access_token),"refresh_token":str(refresh),"user":UserSerializer(user).data},status=status.HTTP_200_OK)
-         
+            refresh = RefreshToken.for_user(user)
+            return Response({"message":"OTP verify successfully","access_token":str(refresh.access_token),"refresh_token":str(refresh),"user":UserSerializer(user).data},status=status.HTTP_200_OK)
+        
          return Response({"message":"Invalid or Expired OTP"},status=status.HTTP_400_BAD_REQUEST)
+    # login
+    @action(detail=False,methods=['post'],permission_classes=[permissions.AllowAny]) 
+    def login(self,request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data,status=status.HTTP_200_OK)

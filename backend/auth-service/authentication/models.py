@@ -33,6 +33,7 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
     last_name = models.CharField(max_length=50, blank=False)
     otp = models.CharField(max_length=7,blank=True,null=True)
     otp_expires = models.DateTimeField(blank=True,null=True)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     createdAt = models.DateTimeField(auto_now_add=True)
@@ -51,7 +52,7 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
         
     def verify_otp(self,otp_input):
         if self.otp == otp_input and self.otp_expires > timezone.now():
-            return True 
+           return True 
         return False
 
     
