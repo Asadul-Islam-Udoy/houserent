@@ -1,8 +1,11 @@
 from rest_framework import serializers
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.hashers import make_password
+from .models import Profile
 import uuid
 User = get_user_model()
 
@@ -26,7 +29,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"message":"Either email or phone is required"})
        
         if not email:
-            attrs['email'] =  f"no-email-{first_name}{last_name}".lower()
+            attrs['email'] =  f"no-email-{first_name}{last_name}{uuid.uuid4().hex[:6]}".lower()
        
         if not phone :
             attrs['phone'] =  f"no-phone-{uuid.uuid4().hex[:6]}"  
@@ -49,13 +52,32 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.username = f"{user.first_name}{user.last_name}".lower()
         user.set_password(validated_data['password'])
         user.save()
+        Profile.objects.create(user=user)
         return user 
     
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+       model = Profile
+       fields = '__all__'
+       
+    def update(self,instance,validated_data):
+        user_data = validated_data.pop("user",None)
+        for attr,value in validated_data.items():
+            setattr(instance,attr,value)
+        instance.save()
+        if user_data:
+            for attr,value in validated_data.items():
+                setattr(instance,attr,value)
+            instance.save()
+        return instance
+    
 class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer()
     class Meta:
         model = User
         exclude = ['password']
-
+        
+  
 class LoginSerializer(serializers.Serializer):
     email_or_phone = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True)
@@ -77,10 +99,43 @@ class LoginSerializer(serializers.Serializer):
        
         if not user.is_active:
            raise serializers.ValidationError("Accound is not active")
-       
+        
+        Profile.objects.get_or_create(user=user)
+        
         refresh = RefreshToken.for_user(user)
         return{
              "refresh": str(refresh),
             "access": str(refresh.access_token),
              "user": UserSerializer(user).data
         }
+   
+class ForgetPasswordVerifySerializer(serializers.Serializer):
+    otp = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+    new_comfirm_password = serializers.CharField(write_only=True)
+    def validate(self,attrs):
+        otp = attrs.get('otp')
+        new_password = attrs.get('new_password')
+        new_confrim_password = attrs.get('new_comfirm_password')
+        
+        if new_password != new_confrim_password:
+            raise serializers.ValidationError("New password and confirm password do not match.")
+        user = User.objects.filter(otp=otp).first()
+        if not user:
+             raise serializers.ValidationError("Invalid user OTP.")
+        if user.otp_expires and user.otp_expires > timezone.now():
+            raise serializers.ValidationError("OTP time is expires")
+        self.user = user
+        return attrs
+    
+    def save(self):
+        user  = self.user
+        user.password = make_password(self.validated_data['new_password'])
+        user.otp = None
+        user.otp_expires = None
+        user.save()
+        return user
+            
+    
+
+
