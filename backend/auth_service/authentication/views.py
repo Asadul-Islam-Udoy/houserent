@@ -23,13 +23,13 @@ class UserViewSet(viewsets.GenericViewSet):
 
     ##permission system register and verify_otp
     def get_permissions(self):
-        if self.action in ['register', 'login', 'verify_user']:
+        if self.action in ['register', 'login', 'verify_user','forget_password','forget_password_verify']:
             return [permissions.AllowAny()]
         return super().get_permissions()
     
     ##permission system register and verify_otp
     def get_authenticators(self):
-        if getattr(self, 'action', None) in  ['register', 'login', 'verify_user']:
+        if getattr(self, 'action', None) in  ['register', 'login', 'verify_user','forget_password','forget_password_verify']:
             return []  
         return super().get_authenticators()
     
