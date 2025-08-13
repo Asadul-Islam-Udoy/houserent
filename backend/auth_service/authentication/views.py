@@ -19,8 +19,6 @@ User = get_user_model()
 class UserViewSet(viewsets.GenericViewSet):
     queryset = User.objects.all()
     permission_classes = [permissions.IsAuthenticated]
-
-
     ##permission system register and verify_otp
     def get_permissions(self):
         if self.action in ['register', 'login', 'verify_user','forget_password','forget_password_verify']:
