@@ -54,6 +54,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'property_service.urls'
 
+SECRET_KEY = 'sharedsecretkey123'
+
 REST_FRAMEWORK = {
 'DEFAULT_AUTHENTICATION_CLASSES': (
     'rest_framework_simplejwt.authentication.JWTAuthentication',

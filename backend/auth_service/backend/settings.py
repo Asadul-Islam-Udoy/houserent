@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'authentication'
+    'authentication',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -62,12 +64,13 @@ REST_FRAMEWORK = {
     'rest_framework.permissions.IsAuthenticated',
 ),
 }
-
+SECRET_KEY = 'sharedsecretkey123'
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 TEMPLATES = [
     {
@@ -154,6 +157,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 APPEND_SLASH = False
 
+CORS_ALLOW_ALL_ORIGINS = True 
 # AUTHENTICATION_BACKENDS = [
 #     # "accounts.backends.EmailOrPhoneBackend",  # custom backend
 #     "django.contrib.auth.backends.ModelBackend",  # default
