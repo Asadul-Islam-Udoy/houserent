@@ -7,21 +7,22 @@ from .simplejwt import JWTUserlessAuthentication
 from .models import Payment
 from .serializer import PaymentSerializer
 from rest_framework.views import APIView
+from .payment_method import bkash, nagad,paypal,stripe
 
 ORDER_SERVICE_URL = settings.ORDER_SERVICE_URL
 
 
 # Create your views here.
 class PaymentViewSet(viewsets.ModelViewSet):
-     authentication_classes = [JWTUserlessAuthentication]
-     queryset = Payment.objects.all()
-     serializer_class = PaymentSerializer
+    authentication_classes = [JWTUserlessAuthentication]
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
      
-     def create(self,request,*args,**kwargs):
+    def create(self,request,*args,**kwargs):
         order_id = request.data.get('order_id')
         amount = request.data.get('amount')
         method = request.data.get('method')
-         
+        provider = request.data.get('provider')
         try:
             response = requests.get(f"{ORDER_SERVICE_URL}/orders/{order_id}/")
         except requests.exceptions.RequestException as e:
@@ -32,11 +33,14 @@ class PaymentViewSet(viewsets.ModelViewSet):
        
         order_data = response.josn()
         
+        transaction_id = self.process_payment(provider, amount)
+        
         payment = Payment.objects.create(
-             order = order_id,
-             amount = amount,
-             method = method,
-             status = 'escrow'
+            order = order_id,
+            amount = amount,
+            method = method,
+            transaction_id=transaction_id,
+            status = 'escrow'
          )
          
         try:
@@ -54,7 +58,20 @@ class PaymentViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
-    
+     
+     
+    def process_payment(self, provider, amount):
+            # Implement SDK/API calls here
+        if provider == 'stripe':
+            return stripe(amount)
+        elif provider == 'paypal':
+            return paypal(amount)
+        elif provider == 'bkash':
+            return bkash(amount)
+        elif provider == 'nagad':
+            return nagad(amount)
+        else:
+            raise ValueError("Invalid provider")
     
 class OrderConfirmationView(APIView):
     def post(self, request, pk, action):
