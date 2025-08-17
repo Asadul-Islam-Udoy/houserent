@@ -3,7 +3,7 @@ from rest_framework import viewsets,permissions,status,mixins
 from .simplejwt import JWTUserlessAuthentication
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from .serializer import PropertySerializer,PropertyImageSerializer,PropertySerializerCreate
+from .serializer import PropertySerializer,PropertySerializerCreate
 from .models import Property
 from .permission import IsOwnerOrAdmin
 # Create your views here.

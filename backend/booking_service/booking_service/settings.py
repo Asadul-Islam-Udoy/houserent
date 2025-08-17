@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*6p!73$gaz&9c*m2^t-*9rj_e$hug%1dad1oo%6ap7)x)83=fx'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'booking',
+    'rest_framework_simplejwt',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
@@ -50,6 +53,17 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'booking_service.urls'
+
+SECRET_KEY = 'django-insecure-u@w*k0dw@7=#ppl&00(wx4z7w#t((@-9d(fkbu3$%a)ck4rq9l'
+
+REST_FRAMEWORK = {
+'DEFAULT_AUTHENTICATION_CLASSES': (
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
+),
+'DEFAULT_PERMISSION_CLASSES': (
+    'rest_framework.permissions.IsAuthenticated',
+),
+}
 
 TEMPLATES = [
     {
@@ -74,8 +88,12 @@ WSGI_APPLICATION = 'booking_service.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'houserent_booking',
+        'USER': 'postgres',
+        'PASSWORD':'root',
+        'HOST':'localhost',
+        'PORT':'5432'
     }
 }
 
@@ -120,3 +138,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+PROPERTY_SERVICE_URL = 'http://localhost:6000/api/property'
+

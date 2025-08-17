@@ -64,7 +64,7 @@ REST_FRAMEWORK = {
     'rest_framework.permissions.IsAuthenticated',
 ),
 }
-SECRET_KEY = 'sharedsecretkey123'
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),

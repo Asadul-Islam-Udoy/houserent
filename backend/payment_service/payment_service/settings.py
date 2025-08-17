@@ -20,8 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-e-gie#f$u4vjejh5trc@umobaly_1@fh$j_1tnqrcx)+l4-x1%'
-
+SECRET_KEY = 'django-insecure-u@w*k0dw@7=#ppl&00(wx4z7w#t((@-9d(fkbu3$%a)ck4rq9l'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -37,6 +36,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'payment',
+    'rest_framework_simplejwt',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
@@ -50,6 +52,15 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'payment_service.urls'
+
+REST_FRAMEWORK = {
+'DEFAULT_AUTHENTICATION_CLASSES': (
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
+),
+'DEFAULT_PERMISSION_CLASSES': (
+    'rest_framework.permissions.IsAuthenticated',
+),
+}
 
 TEMPLATES = [
     {
@@ -72,13 +83,17 @@ WSGI_APPLICATION = 'payment_service.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'houserent_payment',
+        'USER': 'postgres',
+        'PASSWORD':'root',
+        'HOST':'localhost',
+        'PORT':'5432'
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -118,5 +133,7 @@ STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+ORDER_SERVICE_URL = 'http://localhost:7000/api/payment'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
