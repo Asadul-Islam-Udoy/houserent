@@ -9,7 +9,8 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import environ
+import stripe
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -137,3 +138,15 @@ STATIC_URL = 'static/'
 ORDER_SERVICE_URL = 'http://localhost:7000/api/payment'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# stripe payment
+env = environ.Env()
+environ.Env.read_env()
+
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET")
+
+stripe.api_key = STRIPE_SECRET_KEY
+
+RABBITMQ_URL = ''

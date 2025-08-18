@@ -141,3 +141,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 PROPERTY_SERVICE_URL = 'http://localhost:6000/api/property'
 
+RABBITMQ_URL = ''
+

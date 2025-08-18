@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import json, pika
 import requests
 from django.conf import settings
 from rest_framework import viewsets,status
@@ -10,6 +11,18 @@ from rest_framework.views import APIView
 
 PROPERTY_SERVICE_URL = settings.PROPERTY_SERVICE_URL
 
+
+RABBITMQ_URL = settings.RABBITMQ_URL
+
+def publish_event(event_type, data):
+    connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
+    channel = connection.channel()
+    channel.exchange_declare(exchange='microservice_exchange', exchange_type='fanout')
+    message = json.dumps({"event": event_type, "data": data})
+    channel.basic_publish(exchange='microservice_exchange', routing_key='', body=message)
+    connection.close()
+    
+    
 
 # Create your views here.
 class BookingViewSet(viewsets.ModelViewSet):
@@ -44,7 +57,33 @@ class BookingViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         
+        
+          # Publish event to Payment Service
+        # publish_event("order_created", {
+        #     "order_id": serializer.data["id"],
+        #     "buyer_id": request.user.id,
+        #     "property_id": property_id,
+        #     "total_price": property_data["price"],
+        #     "provider": request.data.get("provider", "stripe")
+        # })
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    
+    def confirm_booking(self, booking_id):
+        booking = Order.objects.get(id=booking_id)
+        booking.status = 'confirmed'
+        booking.save()
+        publish_event("booking_confirmed", {"booking_id": booking.id,
+                                            "user_id": booking.user_id,
+                                            "seller_id": booking.seller_id})
+
+    def reject_booking(self, booking_id):
+        booking = Order.objects.get(id=booking_id)
+        booking.status = 'rejected'
+        booking.save()
+        publish_event("booking_rejected", {"booking_id": booking.id,
+                                           "user_id": booking.user_id,
+                                           "seller_id": booking.seller_id})
         
             
     
