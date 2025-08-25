@@ -8,19 +8,12 @@ from .simplejwt import JWTUserlessAuthentication
 from .models import Order
 from .serializer import OrderSerializer
 from rest_framework.views import APIView
+from .utilis.rabbitmq import publish_event
 
 PROPERTY_SERVICE_URL = settings.PROPERTY_SERVICE_URL
 
 
-RABBITMQ_URL = settings.RABBITMQ_URL
 
-def publish_event(event_type, data):
-    connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
-    channel = connection.channel()
-    channel.exchange_declare(exchange='microservice_exchange', exchange_type='fanout')
-    message = json.dumps({"event": event_type, "data": data})
-    channel.basic_publish(exchange='microservice_exchange', routing_key='', body=message)
-    connection.close()
     
     
 
@@ -32,6 +25,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     
     def create(self,request,*args,**kwargs):
         property_id = request.data.get('property_id')
+        provider = request.data.get('provider')
         if not property_id:
            return Response({"error": "property_id is required"}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -57,15 +51,14 @@ class BookingViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         
-        
           # Publish event to Payment Service
-        # publish_event("order_created", {
-        #     "order_id": serializer.data["id"],
-        #     "buyer_id": request.user.id,
-        #     "property_id": property_id,
-        #     "total_price": property_data["price"],
-        #     "provider": request.data.get("provider", "stripe")
-        # })
+        publish_event("order_created", {
+            "order_id": serializer.data["id"],
+            "buyer_id": request.user.id,
+            "property_id": property_id,
+            "total_price": property_data["price"],
+            "provider": provider
+        })
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     
@@ -74,8 +67,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking.status = 'confirmed'
         booking.save()
         publish_event("booking_confirmed", {"booking_id": booking.id,
-                                            "user_id": booking.user_id,
-                                            "seller_id": booking.seller_id})
+                                            "buyer_id": booking.buyer_id,
+                                            "owner_id": booking.owner_id})
 
     def reject_booking(self, booking_id):
         booking = Order.objects.get(id=booking_id)

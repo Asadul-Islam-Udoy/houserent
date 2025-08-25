@@ -90,8 +90,19 @@ DATABASES = {
         'NAME': 'houserent_property',
         'USER': 'postgres',
         'PASSWORD':'root',
-        'HOST':'localhost',
+        'HOST':'postgres_property',
         'PORT':'5432'
+    }
+}
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB_PROPERTY'),
+        'USER': os.environ.get('POSTGRES_USER_PROPERTY'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD_PROPERTY'),
+        'HOST': 'postgres_property',
+        'PORT': 5432,
     }
 }
 
@@ -140,3 +151,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'property_service',  # container hostname
+    '*'               # optional for dev, remove in production
+]
+CELERY_BROKER_URL = "amqp://guest:guest@rabbitmq:5672//"
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'

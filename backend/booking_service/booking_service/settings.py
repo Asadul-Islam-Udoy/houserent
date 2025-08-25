@@ -86,16 +86,18 @@ WSGI_APPLICATION = 'booking_service.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'houserent_booking',
         'USER': 'postgres',
         'PASSWORD':'root',
-        'HOST':'localhost',
+        'HOST':'postgres_booking',
         'PORT':'5432'
     }
 }
+
 
 
 # Password validation
@@ -139,7 +141,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-PROPERTY_SERVICE_URL = 'http://localhost:6000/api/property'
 
-RABBITMQ_URL = ''
+CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+
+DEBUG = True
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'booking_service']
 

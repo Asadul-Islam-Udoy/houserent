@@ -91,7 +91,7 @@ DATABASES = {
         'NAME': 'houserent_payment',
         'USER': 'postgres',
         'PASSWORD':'root',
-        'HOST':'localhost',
+        'HOST':'postgres_payment',
         'PORT':'5432'
     }
 }

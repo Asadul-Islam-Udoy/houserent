@@ -1,0 +1,122 @@
+      
+version: "3.9"
+
+services:
+  # ===== Postgres for Auth =====
+  postgres_auth:
+    image: postgres:15
+    container_name: postgres_auth
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_AUTH}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_AUTH}
+      POSTGRES_DB: ${POSTGRES_DB_AUTH}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+
+  # ===== Postgres for Property =====
+  postgres_property:
+    image: postgres:15
+    container_name: postgres_property
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_PROPERTY}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_PROPERTY}
+      POSTGRES_DB: ${POSTGRES_DB_PROPERTY}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_property_data:/var/lib/postgresql/data
+
+  # ===== Redis =====
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  # ===== Auth Service =====
+  auth_service:
+    build: ./backend/auth_service
+    container_name: auth_service
+    command: gunicorn auth_service.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ./backend/auth_service:/app
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres_auth
+      - redis
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  auth_celery_worker:
+    build: ./backend/auth_service
+    command: celery -A auth_service worker --loglevel=info
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - ./backend/auth_service:/app
+    restart: always
+
+  # ===== Property Service =====
+  property_service:
+    build: ./backend/property_service
+    container_name: property_service
+    command: gunicorn property_service.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ./backend/property_service:/app
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres_property
+      - redis
+
+  property_celery_worker:
+    build: ./backend/property_service
+    command: celery -A property_service worker -l info
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - ./backend/property_service:/app
+    restart: always
+
+  # ===== NGINX =====
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth_service
+      - property_service
+
+volumes:
+  postgres_auth_data:
+  postgres_property_data:

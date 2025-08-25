@@ -1,0 +1,11 @@
+Django>=4.2
+psycopg[binary]==3.2.2
+gunicorn
+psycopg2-binary
+djangorestframework
+django-cors-headers
+djangorestframework-simplejwt
+django-environ
+pika         
+redis         
+celery    
