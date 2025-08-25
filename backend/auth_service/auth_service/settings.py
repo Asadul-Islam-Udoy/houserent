@@ -100,10 +100,14 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static files
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+# static files (CSS, JS)
+STATIC_URL = '/auth/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# media files (user uploaded)
+MEDIA_URL = '/auth/media/'
+MEDIA_ROOT = BASE_DIR / 'mediafiles'
 # Default primary key
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -118,6 +122,8 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
+FORCE_SCRIPT_NAME = '/auth'
 
 ALLOWED_HOSTS = [
     'localhost',
