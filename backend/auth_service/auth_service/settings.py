@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost auth_service nginx").split()
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Applications
 INSTALLED_APPS = [

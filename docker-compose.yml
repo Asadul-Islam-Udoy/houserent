@@ -42,6 +42,8 @@ services:
     command: gunicorn auth_service.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - ./backend/auth_service:/app
+      - ./backend/auth_service/staticfiles:/app/staticfiles
+      - ./backend/auth_service/mediafiles:/app/mediafiles
     ports:
       - "8001:8000"
     env_file:
@@ -112,6 +114,8 @@ services:
     ports:
       - "80:80"
     volumes:
+      - ./backend/auth_service/staticfiles:/app/staticfiles  # make sure path matches STATIC_ROOT
+      - ./backend/auth_service/mediafiles:/app/mediafiles
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - auth_service
