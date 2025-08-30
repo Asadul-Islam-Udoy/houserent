@@ -6,6 +6,9 @@ djangorestframework
 django-cors-headers
 djangorestframework-simplejwt
 django-environ
+django-celery-beat
+django-celery-results
+django-redis
 pika         
 redis         
 celery   
